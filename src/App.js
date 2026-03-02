@@ -1,72 +1,65 @@
-import React, { useEffect, useState } from "react";
-
-function ProfileCard({ person }) {
-  // BUG #2: wrong prop name used below (person.job doesn't exist; it should be person.profession)
-  return (
-    <div style={{ border: "1px solid #ddd", padding: 16, borderRadius: 10 }}>
-      <h2>{person.fullName}</h2>
-      <p><b>Profession:</b> {person.job}</p>
-      <p><b>Age:</b> {person.age}</p>
-    </div>
-  );
-}
-
-function Counter({ start }) {
-  // BUG #1: start is a string passed from parent, so count becomes stringy during + 1
-  const [count, setCount] = useState(start);
-
-  return (
-    <div style={{ marginTop: 16 }}>
-      <p>Count: {count}</p>
-      <button onClick={() => setCount(count + 1)}>+1</button>
-    </div>
-  );
-}
-
-function SearchBox({ onSearch }) {
-  // BUG #3: input is uncontrolled + onChange sends wrong value (sends event instead of text)
-  return (
-    <div style={{ marginTop: 16 }}>
-      <input
-        placeholder="Search by name..."
-        onChange={onSearch}
-        style={{ padding: 8, width: 240 }}
-      />
-    </div>
-  );
-}
+import React, { useMemo, useState } from "react";
+import MovieList from "./components/MovieList";
+import Filter from "./components/Filter";
+import AddMovie from "./components/AddMovie";
 
 export default function App() {
-  const [query, setQuery] = useState("");
-  const [person, setPerson] = useState({
-    fullName: "Tony Stark",
-    profession: "Engineer",
-    age: 40,
-  });
+  const [movies, setMovies] = useState([
+    {
+      id: "1",
+      title: "Interstellar",
+      description: "A team travels through a wormhole in space.",
+      posterURL: "https://m.media-amazon.com/images/I/91kFYg4fX3L._AC_SL1500_.jpg",
+      rating: 4.8,
+    },
+    {
+      id: "2",
+      title: "Breaking Bad",
+      description: "A chemistry teacher becomes a meth producer.",
+      posterURL: "https://m.media-amazon.com/images/I/81aQ7h7zQSL._AC_SL1500_.jpg",
+      rating: 4.9,
+    },
+    {
+      id: "3",
+      title: "Inception",
+      description: "A thief who steals corporate secrets through dream-sharing.",
+      posterURL: "https://m.media-amazon.com/images/I/91QK7s8Q5oL._AC_SL1500_.jpg",
+      rating: 4.7,
+    },
+  ]);
 
-  // BUG #4: effect runs every render and keeps overwriting state
-  useEffect(() => {
-    setPerson({ ...person, age: person.age + 0 });
-  });
+  const [titleFilter, setTitleFilter] = useState("");
+  const [rateFilter, setRateFilter] = useState(""); // نخليه string باش input يكون ساهل
 
-  const filteredName = person.fullName.toLowerCase().includes(query.toLowerCase());
+  const filteredMovies = useMemo(() => {
+    const t = titleFilter.trim().toLowerCase();
+    const minRate = rateFilter === "" ? 0 : Number(rateFilter);
+
+    return movies.filter((m) => {
+      const matchTitle = m.title.toLowerCase().includes(t);
+      const matchRate = m.rating >= (Number.isNaN(minRate) ? 0 : minRate);
+      return matchTitle && matchRate;
+    });
+  }, [movies, titleFilter, rateFilter]);
+
+  const addMovie = (newMovie) => {
+    setMovies((prev) => [newMovie, ...prev]);
+  };
 
   return (
     <div style={{ padding: 24, fontFamily: "Arial" }}>
-      <h1>React DevTools Debug Checkpoint</h1>
+      <h1 style={{ marginTop: 0 }}>🎬 Movie App (Hooks)</h1>
 
-      <SearchBox onSearch={(e) => setQuery(e)} />
+      <Filter
+        titleFilter={titleFilter}
+        setTitleFilter={setTitleFilter}
+        rateFilter={rateFilter}
+        setRateFilter={setRateFilter}
+      />
 
-      {filteredName ? <ProfileCard person={person} /> : <p>No match.</p>}
+      <AddMovie onAdd={addMovie} />
 
-      <Counter start={"0"} />
-
-      <button
-        style={{ marginTop: 16 }}
-        onClick={() => setPerson({ ...person, age: person.age + 1 })}
-      >
-        Increase Age
-      </button>
+      <MovieList movies={filteredMovies} />
     </div>
   );
 }
