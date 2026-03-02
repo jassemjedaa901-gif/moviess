@@ -1,7 +1,10 @@
 import React, { useMemo, useState } from "react";
+import { Routes, Route } from "react-router-dom";
+
 import MovieList from "./components/MovieList";
 import Filter from "./components/Filter";
 import AddMovie from "./components/AddMovie";
+import MovieDetails from "./pages/MovieDetails";
 
 export default function App() {
   const [movies, setMovies] = useState([
@@ -11,25 +14,20 @@ export default function App() {
       description: "A team travels through a wormhole in space.",
       posterURL: "https://m.media-amazon.com/images/I/91kFYg4fX3L._AC_SL1500_.jpg",
       rating: 4.8,
+      trailerLink: "https://www.youtube.com/embed/zSWdZVtXT7E",
     },
     {
       id: "2",
-      title: "Breaking Bad",
-      description: "A chemistry teacher becomes a meth producer.",
-      posterURL: "https://m.media-amazon.com/images/I/81aQ7h7zQSL._AC_SL1500_.jpg",
-      rating: 4.9,
-    },
-    {
-      id: "3",
       title: "Inception",
-      description: "A thief who steals corporate secrets through dream-sharing.",
+      description: "A thief who steals secrets through dream-sharing.",
       posterURL: "https://m.media-amazon.com/images/I/91QK7s8Q5oL._AC_SL1500_.jpg",
       rating: 4.7,
+      trailerLink: "https://www.youtube.com/embed/YoHD9XEInc0",
     },
   ]);
 
   const [titleFilter, setTitleFilter] = useState("");
-  const [rateFilter, setRateFilter] = useState(""); // نخليه string باش input يكون ساهل
+  const [rateFilter, setRateFilter] = useState("");
 
   const filteredMovies = useMemo(() => {
     const t = titleFilter.trim().toLowerCase();
@@ -42,24 +40,33 @@ export default function App() {
     });
   }, [movies, titleFilter, rateFilter]);
 
-  const addMovie = (newMovie) => {
-    setMovies((prev) => [newMovie, ...prev]);
-  };
+  const addMovie = (newMovie) => setMovies((prev) => [newMovie, ...prev]);
 
   return (
-    <div style={{ padding: 24, fontFamily: "Arial" }}>
-      <h1 style={{ marginTop: 0 }}>🎬 Movie App (Hooks)</h1>
+    <Routes>
+      {/* Home */}
+      <Route
+        path="/"
+        element={
+          <div style={{ padding: 24, fontFamily: "Arial" }}>
+            <h1 style={{ marginTop: 0 }}>🎬 Movie App (Router)</h1>
 
-      <Filter
-        titleFilter={titleFilter}
-        setTitleFilter={setTitleFilter}
-        rateFilter={rateFilter}
-        setRateFilter={setRateFilter}
+            <Filter
+              titleFilter={titleFilter}
+              setTitleFilter={setTitleFilter}
+              rateFilter={rateFilter}
+              setRateFilter={setRateFilter}
+            />
+
+            <AddMovie onAdd={addMovie} />
+
+            <MovieList movies={filteredMovies} />
+          </div>
+        }
       />
 
-      <AddMovie onAdd={addMovie} />
-
-      <MovieList movies={filteredMovies} />
-    </div>
+      {/* Details */}
+      <Route path="/movie/:id" element={<MovieDetails movies={movies} />} />
+    </Routes>
   );
 }
